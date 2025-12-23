@@ -7,8 +7,8 @@ from livekit import AccessToken, VideoGrant
 
 from ml import evaluate
 
-LIVEKIT_API_KEY = os.getenv("LIVEKIT_API_KEY")
-LIVEKIT_API_SECRET = os.getenv("LIVEKIT_API_SECRET")
+LIVEKIT_API_KEY = os.getenv("APIj8fzstX65fdz")
+LIVEKIT_API_SECRET = os.getenv("fXYiXiRBCKI9v1pgyzVeYTEFmxZDWQWOtJhCnKoSm8a")
 
 app = FastAPI()
 
