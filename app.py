@@ -5,7 +5,7 @@ import shutil
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 
-from livekit.api import AccessToken, VideoGrant
+from livekit.api import AccessToken, RoomGrant
 
 from ml import evaluate
 
@@ -38,7 +38,12 @@ def get_token(room: str):
     token = (
         AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET)
         .with_identity(str(uuid.uuid4()))
-        .with_grants(VideoGrant(room_join=True, room=room))
+        .with_grants(
+            RoomGrant(
+                room_join=True,
+                room=room
+            )
+        )
     )
     return {"token": token.to_jwt()}
 
