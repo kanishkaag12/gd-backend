@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+python-socketio
+aiofiles
+torch
+torchaudio
+transformers
+sentence-transformers
+librosa
+numpy
+python-multipart
