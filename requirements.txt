@@ -1,11 +1,10 @@
 fastapi
 uvicorn
-python-socketio
-aiofiles
+python-multipart
 torch
 torchaudio
 transformers
 sentence-transformers
 librosa
 numpy
-python-multipart
+livekit
