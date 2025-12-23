@@ -1,16 +1,27 @@
 import os
 import uuid
 import shutil
+
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from livekit import AccessToken, VideoGrant
+
+from livekit.api import AccessToken, VideoGrant
 
 from ml import evaluate
 
-LIVEKIT_API_KEY = os.getenv("APIj8fzstX65fdz")
-LIVEKIT_API_SECRET = os.getenv("fXYiXiRBCKI9v1pgyzVeYTEFmxZDWQWOtJhCnKoSm8a")
+# -----------------------------
+# Environment variables
+# -----------------------------
+LIVEKIT_API_KEY = os.getenv("LIVEKIT_API_KEY")
+LIVEKIT_API_SECRET = os.getenv("LIVEKIT_API_SECRET")
 
-app = FastAPI()
+if not LIVEKIT_API_KEY or not LIVEKIT_API_SECRET:
+    raise RuntimeError("LIVEKIT_API_KEY or LIVEKIT_API_SECRET not set")
+
+# -----------------------------
+# FastAPI app
+# -----------------------------
+app = FastAPI(title="GD Backend")
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,6 +30,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# -----------------------------
+# LiveKit token endpoint
+# -----------------------------
 @app.get("/token")
 def get_token(room: str):
     token = (
@@ -28,12 +42,17 @@ def get_token(room: str):
     )
     return {"token": token.to_jwt()}
 
+# -----------------------------
+# ML Evaluation endpoint
+# -----------------------------
 @app.post("/evaluate")
 async def evaluate_audio(audio: UploadFile = File(...)):
-    path = f"temp_{uuid.uuid4()}.wav"
+    path = f"/tmp/{uuid.uuid4()}.wav"
+
     with open(path, "wb") as f:
         shutil.copyfileobj(audio.file, f)
 
     result = evaluate(path)
+
     os.remove(path)
     return result

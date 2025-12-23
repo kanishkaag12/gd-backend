@@ -7,4 +7,4 @@ transformers
 sentence-transformers
 librosa
 numpy
-livekit
+livekit-api
