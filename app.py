@@ -1,68 +1,39 @@
 import os
 import uuid
 import shutil
-import socketio
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from livekit import AccessToken, VideoGrant
 
 from ml import evaluate
 
-# -----------------------------
-# Socket.IO setup
-# -----------------------------
-sio = socketio.AsyncServer(
-    cors_allowed_origins="*",
-    async_mode="asgi"
-)
+LIVEKIT_API_KEY = os.getenv("LIVEKIT_API_KEY")
+LIVEKIT_API_SECRET = os.getenv("LIVEKIT_API_SECRET")
 
-fastapi_app = FastAPI(title="GD Backend")
+app = FastAPI()
 
-# -----------------------------
-# CORS (MANDATORY)
-# -----------------------------
-fastapi_app.add_middleware(
+app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# -----------------------------
-# Attach Socket.IO to FastAPI
-# -----------------------------
-app = socketio.ASGIApp(sio, fastapi_app)
+@app.get("/token")
+def get_token(room: str):
+    token = (
+        AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET)
+        .with_identity(str(uuid.uuid4()))
+        .with_grants(VideoGrant(room_join=True, room=room))
+    )
+    return {"token": token.to_jwt()}
 
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-# -----------------------------
-# Socket.IO events
-# -----------------------------
-@sio.event
-async def connect(sid, environ):
-    print("User connected:", sid)
-
-@sio.event
-async def join(sid, room):
-    await sio.enter_room(sid, room)
-    await sio.emit("user_joined", sid, room=room)
-
-@sio.event
-async def disconnect(sid):
-    print("User disconnected:", sid)
-
-# -----------------------------
-# REST API for ML evaluation
-# -----------------------------
-@fastapi_app.post("/evaluate")
+@app.post("/evaluate")
 async def evaluate_audio(audio: UploadFile = File(...)):
-    file_path = f"{UPLOAD_DIR}/{uuid.uuid4()}.wav"
+    path = f"temp_{uuid.uuid4()}.wav"
+    with open(path, "wb") as f:
+        shutil.copyfileobj(audio.file, f)
 
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(audio.file, buffer)
-
-    result = evaluate(file_path)
-
-    os.remove(file_path)
+    result = evaluate(path)
+    os.remove(path)
     return result
